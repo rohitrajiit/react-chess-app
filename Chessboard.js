@@ -21,12 +21,22 @@ const ChessGame = () => {
         move = null
       }
 
+      setFen(game.fen());
+      if (game.isCheckmate()){
+        if (game.turn() === 'b'){
+        setStatus('Game over, White won by checkmate');}
+        else{
+            setStatus('Game over, Black won by checkmate');
+        }
+        console.log(game.turn())
+        return
+
+      }
       if (move === null) {
         setStatus('Illegal move, please try again');
         return;
       }
 
-      setFen(game.fen());
       setStatus('');
       const newMoves = [...moves];
       console.log(game.turn())
