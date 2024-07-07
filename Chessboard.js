@@ -32,6 +32,13 @@ const ChessGame = () => {
         return
 
       }
+
+      if (game.isDraw()){
+
+        setStatus('Game is Draw');
+        return
+
+      }
       if (move === null) {
         setStatus('Illegal move, please try again');
         return;
