@@ -40,7 +40,7 @@ const ChessGame = () => {
 
       }
       if (move === null) {
-        setStatus('Illegal move, please try again');
+        
         return;
       }
 
