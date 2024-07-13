@@ -84,7 +84,7 @@ const handleNewGame = () => {
     const pgn = prompt('Please enter the PGN:');
     if (pgn) {
       const newGame = new Chess();
-      if (newGame.load_pgn(pgn)) {
+      if (newGame.loadPgn(pgn)) {
         setGame(newGame);
         setFen(newGame.fen());
         setMoves(pgnToMoves(newGame.history({ verbose: true })));
