@@ -29,9 +29,9 @@ th, td {
   text-align: center;
 }
 
-th {
+/* th {
   background-color: #f2f2f2;
-}
+} */
 
 .chess-container {
   display: flex;
@@ -44,4 +44,9 @@ th {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.move-list-container {
+  max-height: 400px; /* Set a fixed height for the scrollable area */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
