@@ -59,10 +59,14 @@ const ChessGame = () => {
     }
   };
 
-  return (
-    <div>
-      <Chessboard position={fen} onDrop={onDrop} />
-      {status && <p style={{ color: 'red' }}>{status}</p>}
+
+
+return (
+    <div className="chess-container">
+      <div className="chessboard-wrapper">
+        <Chessboard position={fen} onDrop={onDrop} />
+        {status && <p style={{ color: 'red' }}>{status}</p>}
+      </div>
       <MoveList moves={moves} />
     </div>
   );
