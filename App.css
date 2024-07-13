@@ -50,3 +50,7 @@ th, td {
   max-height: 400px; /* Set a fixed height for the scrollable area */
   overflow-y: auto; /* Enable vertical scrolling */
 }
+
+.controls {
+  margin-top: 10px;
+}
