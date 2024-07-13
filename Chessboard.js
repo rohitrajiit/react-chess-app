@@ -74,12 +74,13 @@ return (
 
 const MoveList = ({ moves }) => {
   return (
-    <div>
+    <div className="move-list">
       <h3>Move List</h3>
+      <div className="move-list-container">
       <table>
         <thead>
           <tr>
-            <th>#</th>
+            <th>Move</th>
             <th>White</th>
             <th>Black</th>
           </tr>
@@ -94,6 +95,7 @@ const MoveList = ({ moves }) => {
           ))}
         </tbody>
       </table>
+    </div>
     </div>
   );
 };
