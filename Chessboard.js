@@ -3,7 +3,7 @@ import Chessboard from 'chessboardjsx';
 import { Chess } from 'chess.js';
 
 const ChessGame = () => {
-  const [game] = useState(new Chess());
+  const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState(game.fen());
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
@@ -61,16 +61,64 @@ const ChessGame = () => {
 
 
 
-return (
+
+const handleNewGame = () => {
+    const newGame = new Chess();
+    setGame(newGame);
+    setFen(newGame.fen());
+    setMoves([]);
+    setStatus('');
+  };
+
+  const handleSavePGN = () => {
+    const pgn = game.pgn();
+    const element = document.createElement("a");
+    const file = new Blob([pgn], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = "game.pgn";
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const handleLoadPGN = () => {
+    const pgn = prompt('Please enter the PGN:');
+    if (pgn) {
+      const newGame = new Chess();
+      if (newGame.load_pgn(pgn)) {
+        setGame(newGame);
+        setFen(newGame.fen());
+        setMoves(pgnToMoves(newGame.history({ verbose: true })));
+        setStatus('');
+      } else {
+        alert('Invalid PGN');
+      }
+    }
+  };
+
+  const pgnToMoves = (history) => {
+    const newMoves = [];
+    for (let i = 0; i < history.length; i += 2) {
+      newMoves.push([history[i]?.san, history[i + 1]?.san]);
+    }
+    return newMoves;
+  };
+
+  return (
     <div className="chess-container">
       <div className="chessboard-wrapper">
         <Chessboard position={fen} onDrop={onDrop} />
         {status && <p style={{ color: 'red' }}>{status}</p>}
+        <div className="controls">
+          <button onClick={handleNewGame}>New Game</button>
+          <button onClick={handleSavePGN}>Save PGN</button>
+          <button onClick={handleLoadPGN}>Load PGN</button>
+        </div>
       </div>
       <MoveList moves={moves} />
     </div>
   );
 };
+
 
 const MoveList = ({ moves }) => {
   return (
