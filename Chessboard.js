@@ -7,57 +7,72 @@ const ChessGame = () => {
   const [fen, setFen] = useState(game.fen());
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
+  const [selectedSquare, setSelectedSquare] = useState(null);
 
-  const onDrop = ({ sourceSquare, targetSquare }) => {
-    let move
-    try {
-        try{
-       move= game.move({
-        from: sourceSquare,
-        to: targetSquare,
-        promotion: 'q' // Always promote to a queen for simplicity
-      });}
-      catch(error){
-        move = null
-      }
-
-      setFen(game.fen());
-      if (game.isCheckmate()){
-        if (game.turn() === 'b'){
-        setStatus('Game over, White won by checkmate');}
-        else{
-            setStatus('Game over, Black won by checkmate');
-        }
-        console.log(game.turn())
-        return
-
-      }
-
-      if (game.isDraw()){
-
-        setStatus('Game is Draw');
-        return
-
-      }
-      if (move === null) {
-        
-        return;
-      }
-
-      setStatus('');
-      const newMoves = [...moves];
-      console.log(game.turn())
-      if (game.turn() === 'b') {
-        newMoves.push([move.san]);
-      } else {
-        newMoves[newMoves.length - 1].push(move.san);
-      }
-      setMoves(newMoves);
-    } catch (error) {
-      console.error('An error occurred:', error);
-      setStatus('An unexpected error occurred. Please try again.');
+  const handleSquareClick = (square) => {
+    if (selectedSquare) {
+      handleMove(selectedSquare, square);
+      setSelectedSquare(null);
+    } else {
+      setSelectedSquare(square);
     }
   };
+
+
+  const onDrop = ({ sourceSquare, targetSquare }) => {
+    handleMove(sourceSquare, targetSquare);
+  };
+
+  const handleMove = (sourceSquare, targetSquare) =>{
+        let move
+        try {
+            try{
+           move= game.move({
+            from: sourceSquare,
+            to: targetSquare,
+            promotion: 'q' // Always promote to a queen for simplicity
+          });}
+          catch(error){
+            move = null
+          }
+    
+          setFen(game.fen());
+          if (game.isCheckmate()){
+            if (game.turn() === 'b'){
+            setStatus('Game over, White won by checkmate');}
+            else{
+                setStatus('Game over, Black won by checkmate');
+            }
+            console.log(game.turn())
+            return
+    
+          }
+    
+          if (game.isDraw()){
+    
+            setStatus('Game is Draw');
+            return
+    
+          }
+          if (move === null) {
+            
+            return;
+          }
+    
+          setStatus('');
+          const newMoves = [...moves];
+          console.log(game.turn())
+          if (game.turn() === 'b') {
+            newMoves.push([move.san]);
+          } else {
+            newMoves[newMoves.length - 1].push(move.san);
+          }
+          setMoves(newMoves);
+        } catch (error) {
+          console.error('An error occurred:', error);
+          setStatus('An unexpected error occurred. Please try again.');
+        }
+      };
 
 
 
@@ -68,6 +83,8 @@ const handleNewGame = () => {
     setFen(newGame.fen());
     setMoves([]);
     setStatus('');
+    setSelectedSquare(null);
+
   };
 
   const handleSavePGN = () => {
@@ -106,7 +123,12 @@ const handleNewGame = () => {
   return (
     <div className="chess-container">
       <div className="chessboard-wrapper">
-        <Chessboard position={fen} onDrop={onDrop} />
+        <Chessboard position={fen} onDrop={onDrop}
+                  onSquareClick={handleSquareClick}
+                  selectedSquare={selectedSquare}
+                  squareStyles={{
+                    [selectedSquare]: { backgroundColor: 'rgba(255, 255, 0, 0.4)' },
+                  }} />
         {status && <p style={{ color: 'red' }}>{status}</p>}
         <div className="controls">
           <button onClick={handleNewGame}>New Game</button>
