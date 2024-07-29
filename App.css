@@ -54,3 +54,10 @@ th, td {
 .controls {
   margin-top: 10px;
 }
+.timer {
+  display: flex;
+  justify-content: space-between;
+  width: 200px;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
