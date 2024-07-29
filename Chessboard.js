@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import Chessboard from 'chessboardjsx';
 import { Chess } from 'chess.js';
 
@@ -8,6 +8,40 @@ const ChessGame = () => {
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
   const [selectedSquare, setSelectedSquare] = useState(null);
+  const [whiteTime, setWhiteTime] = useState(6);
+  const [blackTime, setBlackTime] = useState(6);
+  const [activePlayer, setActivePlayer] = useState('w');
+
+  const whiteTimerRef = useRef();
+  const blackTimerRef = useRef();
+
+  setInterval(() => {
+    if (whiteTime==0){setStatus('Game over, Black won by timeout')};
+    if (blackTime==0){setStatus('Game over, White won by timeout')};
+  },1000)
+
+
+  useEffect(() => {
+    if (activePlayer === 'w') {
+      clearInterval(blackTimerRef.current);
+      whiteTimerRef.current = setInterval(() => {
+        setWhiteTime((prevTime) => Math.max(0,prevTime - 1));
+
+      }, 1000);
+
+    } else {
+      clearInterval(whiteTimerRef.current);
+      blackTimerRef.current = setInterval(() => {
+        setBlackTime((prevTime) => Math.max(0,prevTime - 1));
+      }, 1000);
+
+    }
+
+    return () => {
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+    };
+  }, [activePlayer]);
 
   const handleSquareClick = (square) => {
     if (selectedSquare) {
@@ -25,6 +59,18 @@ const ChessGame = () => {
 
   const handleMove = (sourceSquare, targetSquare) =>{
         let move
+        if (whiteTime==0){
+            clearInterval(whiteTimerRef.current);
+            clearInterval(blackTimerRef.current);
+            setStatus('Game over, Black won by timeout');
+            return
+        }
+        if (blackTime==0){
+            clearInterval(whiteTimerRef.current);
+            clearInterval(blackTimerRef.current);
+            setStatus('Game over, White won by timeout');
+            return
+        }
         try {
             try{
            move= game.move({
@@ -35,9 +81,12 @@ const ChessGame = () => {
           catch(error){
             move = null
           }
-    
+          setActivePlayer(game.turn() === 'w' ? 'w' : 'b');
+
           setFen(game.fen());
           if (game.isCheckmate()){
+            clearInterval(whiteTimerRef.current);
+            clearInterval(blackTimerRef.current);
             if (game.turn() === 'b'){
             setStatus('Game over, White won by checkmate');}
             else{
@@ -50,6 +99,8 @@ const ChessGame = () => {
     
           if (game.isDraw()){
     
+            clearInterval(whiteTimerRef.current);
+            clearInterval(blackTimerRef.current);
             setStatus('Game is Draw');
             return
     
@@ -120,9 +171,19 @@ const handleNewGame = () => {
     return newMoves;
   };
 
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
   return (
     <div className="chess-container">
       <div className="chessboard-wrapper">
+      <div className="timer">
+          <div>White: {formatTime(whiteTime)}</div>
+          <div>Black: {formatTime(blackTime)}</div>
+        </div>
         <Chessboard position={fen} onDrop={onDrop}
                   onSquareClick={handleSquareClick}
                   selectedSquare={selectedSquare}
