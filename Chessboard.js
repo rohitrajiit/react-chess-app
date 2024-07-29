@@ -8,8 +8,8 @@ const ChessGame = () => {
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
   const [selectedSquare, setSelectedSquare] = useState(null);
-  const [whiteTime, setWhiteTime] = useState(6);
-  const [blackTime, setBlackTime] = useState(6);
+  const [whiteTime, setWhiteTime] = useState(600);
+  const [blackTime, setBlackTime] = useState(600);
   const [activePlayer, setActivePlayer] = useState('w');
 
   const whiteTimerRef = useRef();
