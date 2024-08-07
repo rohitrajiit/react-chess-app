@@ -2,24 +2,38 @@ import React, { useState, useEffect, useRef  } from 'react';
 import Chessboard from 'chessboardjsx';
 import { Chess } from 'chess.js';
 
+let gameover = false;
+let totaltime = 600;
+
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState(game.fen());
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
   const [selectedSquare, setSelectedSquare] = useState(null);
-  const [whiteTime, setWhiteTime] = useState(600);
-  const [blackTime, setBlackTime] = useState(600);
+  const [whiteTime, setWhiteTime] = useState(totaltime);
+  const [blackTime, setBlackTime] = useState(totaltime);
   const [activePlayer, setActivePlayer] = useState('w');
 
   const whiteTimerRef = useRef();
   const blackTimerRef = useRef();
 
-  setInterval(() => {
-    if (whiteTime==0){setStatus('Game over, Black won by timeout')};
-    if (blackTime==0){setStatus('Game over, White won by timeout')};
-  },1000)
 
+  useEffect(() => {
+    if (whiteTime===0){setStatus('Game over, Black won by timeout');
+        gameover = true;
+    };
+    if (blackTime==0){setStatus('Game over, White won by timeout')
+        gameover = true;
+    };
+    
+}, [whiteTime, blackTime]);
+
+  if (gameover){
+    clearInterval(whiteTimerRef.current);
+    clearInterval(blackTimerRef.current);
+
+  }
 
   useEffect(() => {
     if (activePlayer === 'w') {
@@ -87,6 +101,7 @@ const ChessGame = () => {
           if (game.isCheckmate()){
             clearInterval(whiteTimerRef.current);
             clearInterval(blackTimerRef.current);
+            gameover = true
             if (game.turn() === 'b'){
             setStatus('Game over, White won by checkmate');}
             else{
@@ -102,7 +117,9 @@ const ChessGame = () => {
             clearInterval(whiteTimerRef.current);
             clearInterval(blackTimerRef.current);
             setStatus('Game is Draw');
+            gameover = true
             return
+
     
           }
           if (move === null) {
@@ -135,6 +152,14 @@ const handleNewGame = () => {
     setMoves([]);
     setStatus('');
     setSelectedSquare(null);
+    gameover = false
+    setWhiteTime(totaltime);
+    setBlackTime(totaltime);
+    whiteTimerRef.current = setInterval(() => {
+        setWhiteTime((prevTime) => Math.max(0,prevTime - 1));
+
+      }, 1000);
+
 
   };
 
