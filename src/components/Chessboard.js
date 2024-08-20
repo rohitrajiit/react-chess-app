@@ -14,6 +14,8 @@ const ChessGame = () => {
   const [whiteTime, setWhiteTime] = useState(totaltime);
   const [blackTime, setBlackTime] = useState(totaltime);
   const [activePlayer, setActivePlayer] = useState('w');
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
+  const [gameHistory, setGameHistory] = useState([]);
 
   const whiteTimerRef = useRef();
   const blackTimerRef = useRef();
@@ -136,6 +138,8 @@ const ChessGame = () => {
             newMoves[newMoves.length - 1].push(move.san);
           }
           setMoves(newMoves);
+          setCurrentMoveIndex(newMoves.length - 1);
+          setGameHistory([...gameHistory, game.fen()]);
         } catch (error) {
           console.error('An error occurred:', error);
           setStatus('An unexpected error occurred. Please try again.');
@@ -159,8 +163,8 @@ const handleNewGame = () => {
         setWhiteTime((prevTime) => Math.max(0,prevTime - 1));
 
       }, 1000);
-
-
+    setCurrentMoveIndex(-1);
+    setGameHistory([]);
   };
 
   const handleSavePGN = () => {
@@ -182,6 +186,15 @@ const handleNewGame = () => {
         setFen(newGame.fen());
         setMoves(pgnToMoves(newGame.history({ verbose: true })));
         setStatus('');
+        setCurrentMoveIndex(newGame.history().length - 1);
+        setGameHistory(newGame.history().map((_, index) => {
+          const tempGame = new Chess();
+          tempGame.loadPgn(pgn);
+          for (let i = 0; i <= index; i++) {
+            tempGame.move(tempGame.history()[0]);
+          }
+          return tempGame.fen();
+        }));
       } else {
         alert('Invalid PGN');
       }
@@ -202,6 +215,24 @@ const handleNewGame = () => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  const handleBack = () => {
+    if (currentMoveIndex > -1) {
+      const newGame = new Chess(gameHistory[currentMoveIndex - 1]);
+      setGame(newGame);
+      setFen(newGame.fen());
+      setCurrentMoveIndex(currentMoveIndex - 1);
+    }
+  };
+
+  const handleForward = () => {
+    if (currentMoveIndex < gameHistory.length - 1) {
+      const newGame = new Chess(gameHistory[currentMoveIndex + 1]);
+      setGame(newGame);
+      setFen(newGame.fen());
+      setCurrentMoveIndex(currentMoveIndex + 1);
+    }
+  };
+
   return (
     <div className="chess-container">
       <div className="chessboard-wrapper">
@@ -220,6 +251,8 @@ const handleNewGame = () => {
           <button onClick={handleNewGame}>New Game</button>
           <button onClick={handleSavePGN}>Save PGN</button>
           <button onClick={handleLoadPGN}>Load PGN</button>
+          <button onClick={handleBack}>Back</button>
+          <button onClick={handleForward}>Forward</button>
         </div>
       </div>
       <MoveList moves={moves} />
