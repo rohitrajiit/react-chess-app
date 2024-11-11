@@ -46,9 +46,28 @@ const ChessGame = () => {
 
     // Handle move made by opponent
     socketRef.current.on('moveMade', (move) => {
-      game.move(move);
+      var newm = game.move(move);
       console.log(move);
       setFen(game.fen());
+      // const newMoves = [...moves];
+      console.log(game.turn())
+      console.log('move', newm.san)
+      console.log('move state', moves)
+
+
+    setMoves(moves=>{
+      const newMoves = [...moves];
+
+      if (game.turn() === 'b') {
+        newMoves.push([newm.san]);
+      } else {
+        newMoves[newMoves.length - 1].push(newm.san);
+      }
+      return newMoves
+
+    });
+      console.log('move state', moves)
+
 
     });
 
@@ -89,8 +108,9 @@ const ChessGame = () => {
     // Update game state
     setFen(game.fen());
     setStatus('');
+    console.log(game.turn())
 
-    // Emit move to server
+
     socketRef.current.emit('move', move);
   };
 
