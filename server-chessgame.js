@@ -15,6 +15,9 @@ const ChessGame = () => {
   const [playerColor, setPlayerColor] = useState(null); // New state
   const [gameOver, setGameOver] = useState(false);
   const socketRef = useRef();
+  const whiteTimerRef = useRef();
+  const blackTimerRef = useRef();
+
 
   useEffect(() => {
     // Connect to the server
@@ -82,6 +85,46 @@ const ChessGame = () => {
       socketRef.current.disconnect();
     };
   }, []);
+
+
+
+  useEffect(() => {
+    if (whiteTime===0){setStatus('Game over, Black won by timeout');
+        setGameOver(true);
+    };
+    if (blackTime==0){setStatus('Game over, White won by timeout')
+      setGameOver(true);
+    };
+    
+}, [whiteTime, blackTime]);
+
+  if (gameOver){
+    clearInterval(whiteTimerRef.current);
+    clearInterval(blackTimerRef.current);
+
+  }
+
+  useEffect(() => {
+    if (game.turn() === 'w') {
+      clearInterval(blackTimerRef.current);
+      whiteTimerRef.current = setInterval(() => {
+        setWhiteTime((prevTime) => Math.max(0,prevTime - 1));
+
+      }, 1000);
+
+    } else {
+      clearInterval(whiteTimerRef.current);
+      blackTimerRef.current = setInterval(() => {
+        setBlackTime((prevTime) => Math.max(0,prevTime - 1));
+      }, 1000);
+
+    }
+
+    return () => {
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+    };
+  }, [moves]);
 
   const handleMove = (sourceSquare, targetSquare) => {
     if (gameOver) return;
