@@ -72,6 +72,32 @@ const ChessGame = () => {
       console.log('move state', moves)
 
 
+    if (game.isCheckmate()){
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+      setGameOver(true)
+      if (game.turn() === 'b'){
+      setStatus('Game over, White won by checkmate');}
+      else{
+          setStatus('Game over, Black won by checkmate');
+      }
+      console.log(game.turn())
+      return
+
+    }
+
+    if (game.isDraw()){
+
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+      setStatus('Game is Draw');
+      setGameOver(true)
+      return
+
+
+    }
+
+
     });
 
     // Handle game over
@@ -148,6 +174,7 @@ const ChessGame = () => {
     catch(error){legalMove =null}
     if (legalMove === null) return;
 
+
     // Update game state
     setFen(game.fen());
     setStatus('');
@@ -155,6 +182,32 @@ const ChessGame = () => {
 
 
     socketRef.current.emit('move', move);
+
+    if (game.isCheckmate()){
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+      setGameOver(true)
+      if (game.turn() === 'b'){
+      setStatus('Game over, White won by checkmate');}
+      else{
+          setStatus('Game over, Black won by checkmate');
+      }
+      console.log(game.turn())
+      return
+
+    }
+
+    if (game.isDraw()){
+
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+      setStatus('Game is Draw');
+      setGameOver(true)
+      return
+
+
+    }
+
   };
 
   const onDrop = ({ sourceSquare, targetSquare }) => {
