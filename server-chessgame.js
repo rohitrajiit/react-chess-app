@@ -1,4 +1,5 @@
 // src/components/Chessboard.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import Chessboard from 'chessboardjsx';
 import { Chess } from 'chess.js';
@@ -9,33 +10,31 @@ const ChessGame = () => {
   const [fen, setFen] = useState(game.fen());
   const [status, setStatus] = useState('');
   const [moves, setMoves] = useState([]);
-  const [selectedSquare, setSelectedSquare] = useState(null);
   const [whiteTime, setWhiteTime] = useState(600);
   const [blackTime, setBlackTime] = useState(600);
-  const [playerColor, setPlayerColor] = useState(null); // New state
+  const [playerColor, setPlayerColor] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const socketRef = useRef();
   const whiteTimerRef = useRef();
   const blackTimerRef = useRef();
 
-
   useEffect(() => {
     // Connect to the server
     socketRef.current = io('http://localhost:4000');
 
-    // Join a game room (you can use a unique room ID)
+    // Join a game room
     const roomId = 'room1'; // Replace with dynamic ID as needed
     socketRef.current.emit('joinGame', roomId);
 
     // Receive player color
     socketRef.current.on('playerColor', (color) => {
-      console.log(color)
+      console.log(color);
       setPlayerColor(color);
     });
 
     // If spectator
     socketRef.current.on('spectator', () => {
-      console.log('spectator')
+      console.log('spectator');
       setStatus('You are a spectator');
     });
 
@@ -44,66 +43,50 @@ const ChessGame = () => {
       setFen(fen);
       const newGame = new Chess(fen);
       setGame(newGame);
-      console.log(fen)
+      console.log(fen);
     });
 
     // Handle move made by opponent
     socketRef.current.on('moveMade', (move) => {
-      var newm = game.move(move);
-      console.log(move);
+      const current = game.move(move);
       setFen(game.fen());
-      // const newMoves = [...moves];
-      console.log(game.turn())
-      console.log('move', newm.san)
-      console.log('move state', moves)
 
 
-    setMoves(moves=>{
-      const newMoves = [...moves];
-
-      if (game.turn() === 'b') {
-        newMoves.push([newm.san]);
-      } else {
-        newMoves[newMoves.length - 1].push(newm.san);
-      }
-      return newMoves
-
-    });
-      console.log('move state', moves)
-
-
-    if (game.isCheckmate()){
-      clearInterval(whiteTimerRef.current);
-      clearInterval(blackTimerRef.current);
-      setGameOver(true)
-      if (game.turn() === 'b'){
-      setStatus('Game over, White won by checkmate');}
-      else{
-          setStatus('Game over, Black won by checkmate');
-      }
-      console.log(game.turn())
-      return
-
-    }
-
-    if (game.isDraw()){
-
-      clearInterval(whiteTimerRef.current);
-      clearInterval(blackTimerRef.current);
-      setStatus('Game is Draw');
-      setGameOver(true)
-      return
-
-
-    }
-
+      setMoves((prevMoves) => {
+        console.log(prevMoves,'prevmove')
+        const newMoves = [...prevMoves];
+        console.log('newmoves', newMoves)
+        // const lastMove = game.history({ verbose: true }).pop();
+        const lastMove = current
+        console.log('lastmove', lastMove)
+        if (game.turn() === 'w') {
+          // Black just moved
+          if (newMoves.length === 0 || newMoves[newMoves.length - 1].length === 2) {
+            // newMoves.push(['', lastMove.san]);
+          } else {
+            newMoves[newMoves.length - 1][1] = lastMove.san;
+          }
+        } else {
+          // White just moved
+          if (newMoves.length === 0 || newMoves[newMoves.length - 1].length === 2) {
+            newMoves.push([lastMove.san]);
+          } else {
+            newMoves[newMoves.length - 1][0] = lastMove.san;
+          }
+        }
+        console.log(newMoves,'newmove')
+        console.log(game.turn(),'turn')
+        return newMoves;
+      });
 
     });
 
     // Handle game over
-    socketRef.current.on('gameOver', () => {
-      setStatus('Game Over');
+    socketRef.current.on('gameOver', (message) => {
+      setStatus(message);
       setGameOver(true);
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
     });
 
     // Cleanup on unmount
@@ -112,45 +95,44 @@ const ChessGame = () => {
     };
   }, []);
 
-
+  useEffect(() => {
+    if (whiteTime === 0) {
+      setStatus('Game over, Black won by timeout');
+      setGameOver(true);
+      socketRef.current.emit('timeout');
+    }
+    if (blackTime === 0) {
+      setStatus('Game over, White won by timeout');
+      setGameOver(true);
+      socketRef.current.emit('timeout');
+    }
+  }, [whiteTime, blackTime]);
 
   useEffect(() => {
-    if (whiteTime===0){setStatus('Game over, Black won by timeout');
-        setGameOver(true);
-    };
-    if (blackTime==0){setStatus('Game over, White won by timeout')
-      setGameOver(true);
-    };
-    
-}, [whiteTime, blackTime]);
-
-  if (gameOver){
-    clearInterval(whiteTimerRef.current);
-    clearInterval(blackTimerRef.current);
-
-  }
+    if (gameOver) {
+      clearInterval(whiteTimerRef.current);
+      clearInterval(blackTimerRef.current);
+    }
+  }, [gameOver]);
 
   useEffect(() => {
     if (game.turn() === 'w') {
       clearInterval(blackTimerRef.current);
       whiteTimerRef.current = setInterval(() => {
-        setWhiteTime((prevTime) => Math.max(0,prevTime - 1));
-
+        setWhiteTime((prevTime) => Math.max(0, prevTime - 1));
       }, 1000);
-
     } else {
       clearInterval(whiteTimerRef.current);
       blackTimerRef.current = setInterval(() => {
-        setBlackTime((prevTime) => Math.max(0,prevTime - 1));
+        setBlackTime((prevTime) => Math.max(0, prevTime - 1));
       }, 1000);
-
     }
 
     return () => {
       clearInterval(whiteTimerRef.current);
       clearInterval(blackTimerRef.current);
     };
-  }, [moves]);
+  }, [fen]);
 
   const handleMove = (sourceSquare, targetSquare) => {
     if (gameOver) return;
@@ -168,50 +150,49 @@ const ChessGame = () => {
     };
 
     // Validate move
-    var legalMove = 0;
-    try{
-    legalMove = game.move(move);}
-    catch(error){legalMove =null}
+    let legalMove = null;
+    try {
+      legalMove = game.move(move);
+    } catch (error) {
+      legalMove = null;
+    }
+
     if (legalMove === null) return;
 
-
-    // Update game state
     setFen(game.fen());
     setStatus('');
-    console.log(game.turn())
 
+    // setMoves((prevMoves) => {
+    //   const newMoves = [...prevMoves];
+    //   const lastMove = game.history({ verbose: true }).pop();
+    //   if (game.turn() === 'w') {
+    //     // Black just moved
+    //     if (newMoves.length === 0 || newMoves[newMoves.length - 1].length === 2) {
+    //       newMoves.push(['', lastMove.san]);
+    //     } else {
+    //       newMoves[newMoves.length - 1][1] = lastMove.san;
+    //     }
+    //   } else {
+    //     // White just moved
+    //     if (newMoves.length === 0 || newMoves[newMoves.length - 1].length === 2) {
+    //       newMoves.push([lastMove.san]);
+    //     } else {
+    //       newMoves[newMoves.length - 1][0] = lastMove.san;
+    //     }
+    //   }
+    //   return newMoves;
+    // });
 
     socketRef.current.emit('move', move);
-
-    if (game.isCheckmate()){
-      clearInterval(whiteTimerRef.current);
-      clearInterval(blackTimerRef.current);
-      setGameOver(true)
-      if (game.turn() === 'b'){
-      setStatus('Game over, White won by checkmate');}
-      else{
-          setStatus('Game over, Black won by checkmate');
-      }
-      console.log(game.turn())
-      return
-
-    }
-
-    if (game.isDraw()){
-
-      clearInterval(whiteTimerRef.current);
-      clearInterval(blackTimerRef.current);
-      setStatus('Game is Draw');
-      setGameOver(true)
-      return
-
-
-    }
-
   };
 
   const onDrop = ({ sourceSquare, targetSquare }) => {
     handleMove(sourceSquare, targetSquare);
+  };
+
+  const handleResign = () => {
+    if (gameOver) return;
+    socketRef.current.emit('resign');
   };
 
   return (
@@ -224,8 +205,13 @@ const ChessGame = () => {
         <Chessboard
           position={fen}
           onDrop={onDrop}
-          orientation={playerColor === 'b' ? 'black' : 'white'} // Set board orientation
+          orientation={playerColor === 'b' ? 'black' : 'white'}
         />
+        {!gameOver && (
+          <button onClick={handleResign} style={{ marginTop: '10px' }}>
+            Resign
+          </button>
+        )}
         {status && <p style={{ color: 'red' }}>{status}</p>}
       </div>
       <MoveList moves={moves} />
